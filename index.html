@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spot it all!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE gioco: allegro, rumoroso, da tavolo di cucina con i bambini e gli studenti
+   IDEA la scatola di un gioco di carte: fondo giallo sole con coriandoli, carte bianche con il bordo nero da fumetto
+   PICTURE il mazzo intero sparso su un tavolo azzurro, con il piano proiettivo su un cartoncino accanto
+   COLOUR giallo sole, azzurro cielo per il tavolo, arancio per la sfida, magenta e verde per le rette, inchiostro quasi nero
+   TYPE Fredoka per titoli, numeri e simboli, Nunito Sans per il testo
+   LAYOUT laptop: comandi in alto, mazzo largo e cartoncino del piano a destra, sfida sotto; telefono: titolo, comandi, mazzo, piano, sfida */
+:root{color-scheme:light dark;--page:light-dark(#ffd43b,#2a2140);--ink:light-dark(#1a1423,#f6f1ff);--soft:light-dark(#5a4a12,#cfc5e8);--paper:light-dark(#ffffff,#3a3056);--edge:#1a1423;--table:light-dark(#1fa2ff,#0d5c9c);--tabled:light-dark(#178fe6,#0a4f88);--game:light-dark(#ff6b3d,#a8401f);--gamed:light-dark(#f25a2a,#93361a);--hi:#ffd43b;--bad:light-dark(#d1173a,#ff6b81);--good:light-dark(#0f8a4f,#4fd28a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0}
+body{background-color:var(--page);background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Ccircle cx='22' cy='30' r='7' fill='%23ff4f8b' fill-opacity='.55'/%3E%3Cpath d='M120 20l9 16h-18z' fill='%231fa2ff' fill-opacity='.55'/%3E%3Crect x='170' y='70' width='14' height='14' rx='3' transform='rotate(20 177 77)' fill='%2300c46a' fill-opacity='.55'/%3E%3Cpath d='M40 150q10-14 20 0t20 0' stroke='%23ff6b3d' stroke-opacity='.6' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='150' cy='170' r='5' fill='%238e3fbf' fill-opacity='.55'/%3E%3Ccircle cx='200' cy='200' r='4' fill='%23ff6b3d' fill-opacity='.6'/%3E%3C/svg%3E");color:var(--ink);font:16px/1.55 "Nunito Sans",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,3vw,40px) max(4vw,16px)}
+.hero{background:linear-gradient(90deg,var(--page) 0,var(--page) min(760px,92%),transparent min(980px,100%))}
+h1{font:700 clamp(36px,6vw,58px)/1.02 Fredoka,system-ui,sans-serif;margin:0 0 8px;color:var(--ink);text-shadow:3px 3px 0 #ff4f8b;text-wrap:balance}
+h2{font:600 22px/1.2 Fredoka,system-ui,sans-serif;margin:0 0 10px}
+.lead{margin:0 0 18px;max-width:64ch;font-weight:600;color:var(--soft)}
+.ctl{display:flex;flex-wrap:wrap;gap:12px 22px;align-items:flex-end}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp>span{font-weight:800;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+button,select{font:600 16px Fredoka,system-ui,sans-serif;min-height:44px;padding:0 16px;border:3px solid var(--edge);background:#fff;color:#1a1423;border-radius:999px;cursor:pointer;box-shadow:3px 3px 0 var(--edge);transition:transform .08s,box-shadow .08s}
+select{border-radius:14px;padding-right:8px}
+button:hover{background:#fff6cc}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--edge)}
+button:disabled{opacity:.45;cursor:default;transform:none}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.cardb:focus-visible{outline:3px solid #ff4f8b;outline-offset:3px}
+button.on{background:#ff4f8b;color:#fff}
+button.q{min-width:46px;padding:0}
+button.warn.on{background:var(--bad);color:#fff}
+textarea{font:inherit;font-size:16px;width:100%;min-height:80px;border:3px solid var(--edge);border-radius:14px;padding:8px;background:#fff;color:#1a1423}
+.table{background-color:var(--table);background-image:radial-gradient(var(--tabled) 2px,transparent 2.5px);background-size:22px 22px;color:#fff;border-top:4px solid var(--edge);border-bottom:4px solid var(--edge)}
+.tablein{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,340px);gap:clamp(20px,3vw,36px);align-items:start}
+.deckhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 16px;align-items:baseline;margin-bottom:10px}
+.deckhead h2{margin:0;font-size:26px;text-shadow:2px 2px 0 var(--edge)}
+.deck{display:grid;grid-template-columns:repeat(auto-fill,minmax(var(--cw),1fr));gap:12px}
+.cardb{background:none;border:0;padding:0;min-height:0;border-radius:50%;cursor:pointer;box-shadow:none}
+.cardb:hover{background:none;transform:rotate(-3deg)}
+.cardb:active{transform:scale(.97);box-shadow:none}
+.cardb svg{width:100%;height:auto;display:block;filter:drop-shadow(4px 4px 0 var(--edge))}
+.cardb.sel svg{filter:drop-shadow(4px 4px 0 var(--edge)) drop-shadow(0 0 8px var(--rc))}
+.cardb.sel circle.rim{stroke:var(--rc);stroke-width:9}
+.sticker{background:var(--paper);color:var(--ink);border:3px solid var(--edge);border-radius:20px;padding:16px;box-shadow:6px 6px 0 var(--edge)}
+.plane svg{width:100%;height:auto;display:block;color:var(--ink)}
+.lg{display:flex;flex-direction:column;gap:4px;margin:10px 0 0;font-size:15px}
+.lg>span{display:block;padding-left:22px;text-indent:-22px}
+.lg i{width:14px;height:14px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-2px;text-indent:0;border:2px solid var(--edge)}
+.eq{font-family:Fredoka,system-ui,sans-serif;font-weight:600}
+.small{font-size:14px;color:var(--soft)}
+.table .small{color:#fff;font-weight:600}
+.sticker .small{color:var(--ink);opacity:.8}
+.gband{background-color:var(--game);background-image:repeating-linear-gradient(135deg,var(--gamed) 0 14px,transparent 14px 28px);color:#fff;border-bottom:4px solid var(--edge)}
+.gband h2{font-size:28px;text-shadow:2px 2px 0 var(--edge)}
+.gband .intro{font-weight:700;max-width:60ch;margin:0 0 16px}
+.game{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,290px);gap:24px;align-items:center}
+.game .big svg{width:100%;max-width:330px;height:auto;display:block;margin:auto;filter:drop-shadow(5px 5px 0 var(--edge))}
+.game .big g.sym{cursor:pointer}
+.game .big g.sym:hover{opacity:.65}
+.timer{font:700 clamp(44px,6vw,60px)/1 Fredoka,system-ui,sans-serif;margin:0;font-variant-numeric:tabular-nums}
+.gprog{font:600 18px Fredoka,system-ui,sans-serif;margin:8px 0 6px}
+.pbar{height:14px;border:3px solid var(--edge);border-radius:99px;background:#fff;overflow:hidden;margin-bottom:12px}
+.pbar i{display:block;height:100%;background:#00c46a;transition:width .2s}
+#gmsg{min-height:0;margin:0 0 12px;font-weight:700}
+#gmsg:empty{display:none}
+#gmsg.bad{color:var(--bad)}#gmsg.good{color:var(--good)}
+.lists{columns:2 260px;column-gap:28px;font-size:15px}
+.lists p{margin:0 0 4px;break-inside:avoid}
+details{background:var(--paper);border:3px solid var(--edge);border-radius:20px;padding:6px 16px;box-shadow:6px 6px 0 var(--edge)}
+.sub{font:600 clamp(20px,2.6vw,26px)/1.2 Fredoka,system-ui,sans-serif;margin:0 0 12px}
+.z4[hidden]{display:none}
+.z4{display:inline-block;background:#fff;color:#1a1423;border:3px solid var(--edge);border-radius:16px;padding:8px 14px;box-shadow:4px 4px 0 var(--edge);font:600 17px/1.35 Fredoka,system-ui,sans-serif;margin:0 0 14px}
+.credit{text-align:center;font-size:13px;color:var(--soft);padding-top:0;font-weight:600}
+.credit a{color:inherit}
+.drop{background:#fff;color:#1a1423;border:3px dashed var(--edge);border-radius:18px;padding:16px;text-align:center}
+.drop.over{background:#fff6cc;border-style:solid}
+.drop p{margin:0 0 6px}.drop .small{color:#4a4a4a;margin:6px 0 0}
+.thumbs{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.th{position:relative;width:64px;height:64px;border:3px solid var(--edge);border-radius:12px;background:#fff;box-shadow:3px 3px 0 var(--edge)}
+.th img{width:100%;height:100%;object-fit:cover;border-radius:9px;display:block}
+.th.unused{opacity:.4}
+.th button{position:absolute;top:-12px;right:-12px;min-height:0;width:28px;height:28px;padding:0;border-width:2px;box-shadow:2px 2px 0 var(--edge);font-size:16px;line-height:1}
+details summary{cursor:pointer;font:600 18px Fredoka,system-ui,sans-serif;min-height:44px;display:flex;align-items:center}
+@media(max-width:900px){.tablein{grid-template-columns:minmax(0,1fr)}.game{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.game .gside{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){button,.cardb,.pbar i{transition:none}.cardb:hover{transform:none}}
+</style>
+</head>
+<body>
+<header class="band hero">
+<h1>Spot it all!</h1>
+<p class="sub">Generatore di Dobble</p>
+<p class="lead">Ogni mazzo è la rappresentazione di un piano proiettivo finito sul campo di Galois di ordine q: i simboli sono i punti, le carte sono le rette. Scegli il valore di q e i simboli: tutte le carte avranno esattamente un simbolo in comune.</p>
+<div class="ctl">
+<div class="grp"><span>Scegli l'ordine del campo</span><div class="row" id="qs"></div></div>
+<div class="grp"><span>Simboli</span><select id="set" aria-label="Insieme di simboli">
+<option value="it">Lettere italiane (21)</option><option value="lat">Lettere A–Z (26)</option><option value="num">Numeri</option><option value="chem">Elementi chimici</option><option value="custom">Parole mie</option><option value="img">Immagini mie</option></select></div>
+</div>
+<div id="customBox" hidden style="margin-top:14px;max-width:640px">
+<textarea id="words" aria-label="Simboli personalizzati, uno per riga">gatto
+cane
+sole
+luna
+mela
+pera
+nave
+treno
+fiore
+casa
+lago
+neve
+vento</textarea>
+<p class="small">Un simbolo per riga o separati da virgole. Se sono meno del necessario, completo con dei numeri.</p>
+</div>
+<div id="imgBox" hidden style="margin-top:16px;max-width:860px">
+<div class="drop" id="drop"><input type="file" id="files" accept="image/*" multiple hidden><p><b>Trascina qui le immagini</b> oppure <button id="imgpick">Scegli i file</button></p><p class="small" id="imgcount"></p></div>
+<div class="thumbs" id="thumbs"></div>
+<button id="imgclear" hidden>Svuota immagini</button>
+</div>
+</header>
+<section class="band table">
+<div class="tablein">
+<div>
+<div class="deckhead"><h2 id="decktitle"></h2><div class="row"><button id="copyList">Copia l'elenco</button><button id="copySvg">Copia l'SVG</button></div></div>
+<p class="small" id="copymsg" style="margin:0 0 10px">Seleziona una carta per vedere la sua retta nel piano. Seleziona una seconda carta per vedere il simbolo in comune.</p>
+<p class="small" id="warn" hidden></p>
+<p class="z4" id="z4" hidden>Riesci a capire cosa c'è che non va? Prova a selezionare qualche coppia di carte.</p>
+<div class="deck" id="deck"></div>
+</div>
+<div class="side">
+<div class="sticker plane"><h2>Il piano</h2><div id="plane"></div><p class="small" id="planecap"></p></div>
+</div>
+</div>
+</section>
+<section class="band gband">
+<h2>Sfida a tempo: 10 coppie</h2>
+<p class="intro">Quanto ci metti a trovare il simbolo in comune in 10 coppie di carte? Seleziona il simbolo giusto su una delle due carte. Ogni errore costa 3 secondi.</p>
+<div class="game">
+<div class="big" id="g1"></div><div class="big" id="g2"></div>
+<div class="gside sticker"><p class="timer" id="timer">0:00,0</p><p class="gprog" id="gprog">Coppia 0 di 10</p><div class="pbar"><i id="pbar" style="width:0"></i></div><p id="gmsg" aria-live="polite"></p><button id="gstart">Via!</button></div>
+</div>
+</section>
+<section class="band">
+<details><summary>Le carte come rette: elenco completo</summary><div class="lists" id="lists"></div></details>
+</section>
+<footer class="band credit">Realizzato da Davide Palmigiani · <a href="https://sites.google.com/view/cuwihwin-root/home-page">Root</a></footer>
+<script>
+{
+const COLS=['#e63946','#1d8a4e','#f08c00','#2b59c3','#8e3fbf','#0f8b8d','#c2185b','#5c4b2b'];
+const IT='A B C D E F G H I L M N O P Q R S T U V Z'.split(' ');
+const LAT='ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const CHEM='H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U'.split(' ');
+const QS=[2,3,4,5,7,8,9];
+const SC=['#ff2e88','#00c46a'];
+let st={q:3,set:'it',dual:false,wrong:false};
+let imgs=[],deck=[],names=[],lines=[],labels=[],sel=[],G={phase:'idle'},tick=null;
+const $=id=>document.getElementById(id);
+
+function field(q,wrong){
+  const add=[],mul=[];
+  for(let a=0;a<q;a++){add.push([]);mul.push([]);for(let b=0;b<q;b++){
+    let s,p;
+    if(wrong){s=(a+b)%q;p=(a*b)%q;}
+    else if([2,3,5,7].includes(q)){s=(a+b)%q;p=(a*b)%q;}
+    else if(q===4||q===8){const P=q===4?7:11,n=q===4?2:3;s=a^b;let r=0,x=a,y=b;while(y){if(y&1)r^=x;y>>=1;x<<=1;if(x>>n&1)x^=P;}p=r;}
+    else{const[a1,a0]=[Math.floor(a/3),a%3],[b1,b0]=[Math.floor(b/3),b%3];s=3*((a1+b1)%3)+(a0+b0)%3;p=3*(((a1*b0+a0*b1)%3+3)%3)+(((a0*b0-a1*b1)%3)+3)%3;}
+    add[a].push(s);mul[a].push(p);}}
+  return{add,mul};
+}
+function build(){
+  const q=st.q,F=field(q,st.wrong),L=[],nm=[];
+  const pt=(x,y)=>x*q+y,inf=m=>q*q+m,vinf=q*q+q;
+  for(let m=0;m<q;m++)for(let c=0;c<q;c++){const l=[];for(let x=0;x<q;x++)l.push(pt(x,F.add[F.mul[m][x]][c]));l.push(inf(m));L.push(l);
+    nm.push(`y = ${m===0?'':m===1?'x':m+'x'}${m&&c?' + ':''}${c||!m?c:''}`);}
+  for(let k=0;k<q;k++){const l=[];for(let y=0;y<q;y++)l.push(pt(k,y));l.push(vinf);L.push(l);nm.push(`x = ${k}`);}
+  const r=[];for(let m=0;m<q;m++)r.push(inf(m));r.push(vinf);L.push(r);nm.push('retta all\'infinito');
+  const P=q*q+q+1;
+  const ptname=i=>i<q*q?`(${Math.floor(i/q)}, ${i%q})`:i<vinf?`P${i-q*q}`:'P∞';
+  if(st.dual){lines=Array.from({length:P},(_,p)=>L.map((l,i)=>l.includes(p)?i:-1).filter(i=>i>=0));names=Array.from({length:P},(_,p)=>'punto '+ptname(p));labels=nm;}
+  else{lines=L;names=nm;labels=Array.from({length:P},(_,i)=>ptname(i));}
+  syms(P);
+}
+let S=[],warn='',eff='it';
+function syms(P){
+  warn='';let base;const P0=P;eff=st.set;
+  if((eff==='it'&&P0>21)||(eff==='lat'&&P0>26))eff=P0<=92&&st.q===9?'chem':'num';
+  if(eff!==st.set)warn=`Le lettere non bastano per ${P0} simboli: uso ${eff==='chem'?'gli elementi chimici':'i numeri'}.`;
+  if(eff==='it')base=IT;else if(eff==='lat')base=LAT;else if(eff==='chem')base=CHEM;
+  else if(st.set==='custom')base=$('words').value.split(/[\n,]+/).map(s=>s.trim()).filter(Boolean);
+  else if(st.set==='img')base=imgs.map((u,i)=>({img:u}));
+  else base=[];
+  if(eff==='num')base=Array.from({length:P},(_,i)=>String(i+1));
+  if(base.length<P&&eff!=='num'){warn=`Servono ${P} simboli e ce ne sono ${base.length}: completo con dei numeri.`;}
+  S=Array.from({length:P},(_,i)=>i<base.length?base[i]:String(i+1));
+}
+function rng(s){return()=>(s=s*16807%2147483647)/2147483647;}
+function cardSVG(ci,size,opt={}){
+  const L=lines[ci],r=rng(ci*7919+st.q*131+11),k=L.length,R=100;
+  const order=L.map((s,i)=>[s,r()]).sort((a,b)=>a[1]-b[1]).map(a=>a[0]);
+  const pos=[];if(k<=4){for(let i=0;i<k;i++){const a=i/k*2*Math.PI+r();pos.push([R+52*Math.cos(a),R+52*Math.sin(a),k<=3?44:38]);}}
+  else{pos.push([R,R,k>8?30:36]);const n=k-1,ring=k>8?66:62;for(let i=0;i<n;i++){const a=i/n*2*Math.PI+r()*.3;pos.push([R+ring*Math.cos(a),R+ring*Math.sin(a),k>8?26:k>6?30:34]);}}
+  let g='';
+  order.forEach((s,i)=>{const[x,y,f]=pos[i],sym=S[s],rot=Math.round((r()-.5)*70),sc=(.8+r()*.4).toFixed(2),hl=opt.hl===s;
+    const c=COLS[s%COLS.length];
+    let body;
+    if(typeof sym==='object'){const w=f*1.5;body=`<image href="${sym.img}" x="${-w/2}" y="${-w/2}" width="${w}" height="${w}"/>`;}
+    else{const t=String(sym),fs=t.length>4?f*.5:t.length>2?f*.62:t.length>1?f*.8:f;
+      body=`<text text-anchor="middle" dominant-baseline="central" font-family="Fredoka,sans-serif" font-weight="700" font-size="${fs.toFixed(1)}" fill="${c}">${esc(t)}</text>`;}
+    g+=`<g class="sym" data-s="${s}" transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${sc})">${hl?`<circle r="${f*.75}" fill="#ffd21f"/>`:''}${body}</g>`;});
+  return `<svg viewBox="0 0 200 200" ${size?`width="${size}" height="${size}"`:''} role="img" aria-label="Carta ${ci+1}: ${L.map(s=>typeof S[s]==='object'?'immagine':S[s]).join(', ')}"><circle class="rim" cx="100" cy="100" r="96" fill="#fff" stroke="#1b1b1b" stroke-width="3"/>${g}</svg>`;
+}
+function esc(t){return t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function common(a,b){return lines[a].filter(s=>lines[b].includes(s));}
+function render(){
+  const P=lines.length,n=P;
+  $('qs').innerHTML=QS.map(q=>`<button class="q${q===st.q&&!st.wrong?' on':''}" data-q="${q}" aria-pressed="${q===st.q&&!st.wrong}">${q}</button>`).join('')+`<button class="warn${st.wrong?' on':''}" data-wrong="1" aria-pressed="${st.wrong}">Z4 (sbagliato)</button>`;
+  $('decktitle').textContent=`${n} carte, ${lines[0].length} simboli per carta`;
+  const cw=P>60?84:P>30?96:118;
+  $('deck').style.setProperty('--cw',cw+'px');
+  const hl=sel.length===2?common(sel[0],sel[1]):[];
+  $('deck').innerHTML=Array.from({length:n},(_,i)=>`<button class="cardb${sel.includes(i)?' sel':''}" style="--rc:${sel.includes(i)?SC[sel.indexOf(i)]:'transparent'}" data-c="${i}" title="${esc(names[i])}">${cardSVG(i,0,{hl:sel.includes(i)&&hl.length===1?hl[0]:-1})}</button>`).join('');
+  $('warn').textContent=warn;$('warn').hidden=!warn;
+  $('z4').hidden=!st.wrong;
+  plane();
+  $('lists').innerHTML=Array.from({length:n},(_,i)=>`<p><b>${i+1}.</b> <span class="eq">${esc(names[i])}</span>: ${lines[i].map(s=>typeof S[s]==='object'?'img':esc(S[s])).join(', ')}</p>`).join('');
+  $('customBox').hidden=st.set!=='custom';$('imgBox').hidden=st.set!=='img';{const P=lines.length;$('imgcount').textContent=imgs.length?`${imgs.length} immagini caricate su ${P} necessarie${imgs.length<P?(P-imgs.length===1?': ne manca una, al suo posto c\'è un numero':`: ne mancano ${P-imgs.length}, al loro posto ci sono dei numeri`):imgs.length>P?(imgs.length-P===1?": l'ultima non viene usata":`: le ultime ${imgs.length-P} non vengono usate`):''}.`:`Ne servono ${P} per questo mazzo. Funzionano meglio icone semplici su sfondo bianco o trasparente.`;
+  $('thumbs').innerHTML=imgs.map((u,i)=>`<span class="th${i>=P?' unused':''}"><img src="${u}" alt="Immagine ${i+1}"><button data-rmimg="${i}" aria-label="Togli l'immagine ${i+1}">×</button></span>`).join('');$('imgclear').hidden=!imgs.length;}
+  $('set').value=st.set;
+}
+function plane(){
+  const q=st.q,W=320,pad=46,cell=(W-pad-70)/(q-1||1),H=pad+cell*(q-1)+40;
+  const own=new Map();sel.forEach((c,k)=>lines[c].forEach(s=>{own.set(s,own.has(s)?'both':k);}));
+  const X=x=>pad+x*cell,Y=y=>H-28-y*cell;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Piano affine ${q} per ${q} e punti all'infinito">`;
+  for(let x=0;x<q;x++)s+=`<text x="${X(x)}" y="${H-6}" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor" fill-opacity=".7">${x}</text>`;
+  for(let y=0;y<q;y++)s+=`<text x="${pad-24}" y="${Y(y)+4}" text-anchor="middle" font-size="12" font-weight="700" fill="currentColor" fill-opacity=".7">${y}</text>`;
+  const dot=(cx,cy,i)=>{const w=own.get(i),col=w===undefined?null:w==='both'?'#ffd43b':SC[w],sym=S[i],t=typeof sym==='object'?'':String(sym).slice(0,3),r=q>7?9:11;
+    return `${w==='both'?`<circle cx="${cx}" cy="${cy}" r="${r+5}" fill="none" stroke="#1a1423" stroke-width="2.5"/>`:''}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${col||'none'}" stroke="${col?'#1a1423':'currentColor'}" stroke-opacity="${col?1:.45}" stroke-width="2"/>${q<=5&&t?`<text x="${cx}" y="${cy+4}" text-anchor="middle" font-size="${t.length>1?9:11}" font-weight="700" fill="${col?'#1a1423':'currentColor'}">${esc(t)}</text>`:''}`;};
+  for(let x=0;x<q;x++)for(let y=0;y<q;y++)s+=dot(X(x),Y(y),x*q+y);
+  const ix=W-24,top=pad-14,step=(H-28-top)/(q);
+  s+=`<line x1="${ix}" y1="${top}" x2="${ix}" y2="${top+step*q}" stroke="currentColor" stroke-opacity=".4" stroke-dasharray="3 4"/>`;
+  for(let m=0;m<=q;m++)s+=dot(ix,top+step*m,q*q+m);
+  s+='</svg>';
+  $('plane').innerHTML=s;
+  let cap=`A sinistra i ${q*q} punti di GF(${q})×GF(${q}); a destra, in colonna, i ${q+1} punti all'infinito (P0 … P${q-1}, P∞). Seleziona una o due carte per illuminare le loro rette.`;
+  if(sel.length){const cm=sel.length===2?common(sel[0],sel[1]):[];
+    cap=`<span class="lg">${sel.map((c,k)=>`<span><i style="background:${SC[k]}"></i>Carta ${c+1}: <span class="eq">${esc(names[c])}</span></span>`).join('')}${sel.length===2?`<span><i style="background:#ffd43b"></i>${cm.length===1?`In comune: <b>${typeof S[cm[0]]==='object'?'un\'immagine':esc(S[cm[0]])}</b>, il punto <span class="eq">${esc(labels[cm[0]])}</span>`:cm.length?`In comune ${cm.length} punti: ${cm.map(s=>`<span class="eq">${esc(labels[s])}</span>`).join(', ')}.`:'Nessun punto in comune.'}</span>`:''}</span>`;}
+  $('planecap').innerHTML=cap;
+}
+const ROUNDS=10,PEN=3000;
+const fmt=ms=>{const s=ms/1000,m=Math.floor(s/60);return `${m}:${(s-m*60).toFixed(1).padStart(4,'0').replace('.',',')}`;};
+const bestKey=()=>'dobble-best-'+st.q;
+function getBest(){try{return +localStorage.getItem(bestKey())||0;}catch(e){return 0;}}
+function setBest(v){try{localStorage.setItem(bestKey(),String(v));}catch(e){}}
+function back(){return `<svg viewBox="0 0 200 200" role="img" aria-label="Carta coperta"><circle cx="100" cy="100" r="96" fill="#ff4f8b" stroke="#1a1423" stroke-width="5"/><circle cx="100" cy="100" r="70" fill="#ffd43b" stroke="#1a1423" stroke-width="4"/><text x="100" y="104" text-anchor="middle" dominant-baseline="central" font-family="Fredoka,sans-serif" font-weight="700" font-size="80" fill="#1a1423">?</text></svg>`;}
+function elapsed(){return G.phase==='run'?performance.now()-G.t0+G.pen:G.total||0;}
+function drawGame(hl=-1){
+  if(G.phase==='run'){const[p,q2]=G.pairs[G.i];$('g1').innerHTML=cardSVG(p,0,{hl});$('g2').innerHTML=cardSVG(q2,0,{hl});}
+  else{$('g1').innerHTML=back();$('g2').innerHTML=back();}
+  $('timer').textContent=fmt(elapsed());
+  const done=G.phase==='run'?G.i:G.phase==='done'?ROUNDS:0;
+  $('gprog').textContent=`Coppia ${Math.min(done+(G.phase==='run'?1:0),ROUNDS)} di ${ROUNDS}`;$('pbar').style.width=done/ROUNDS*100+'%';
+  $('gstart').textContent=G.phase==='run'?'Ricomincia':G.phase==='done'?'Riprova':'Via!';
+  $('gstart').disabled=st.wrong;
+}
+function resetGame(){clearInterval(tick);tick=null;G={phase:'idle'};$('gmsg').className='';$('gmsg').textContent=st.wrong?'Con Z4 la sfida è disattivata. Riesci a capire perché?':'';drawGame();}
+function startGame(){
+  const n=lines.length,pairs=[],seen=new Set();
+  while(pairs.length<ROUNDS){const a=Math.floor(Math.random()*n),b=Math.floor(Math.random()*n),k=Math.min(a,b)+'-'+Math.max(a,b);if(a===b||(seen.has(k)&&seen.size<n*(n-1)/2))continue;seen.add(k);pairs.push([a,b]);}
+  G={phase:'run',pairs,i:0,t0:performance.now(),pen:0,err:0,lock:false};
+  clearInterval(tick);tick=setInterval(()=>{$('timer').textContent=fmt(elapsed());},100);
+  $('gmsg').className='';$('gmsg').textContent='Trova il simbolo in comune!';drawGame();
+}
+function pick(s){
+  if(G.phase!=='run'||G.lock)return;const[a,b]=G.pairs[G.i],c=common(a,b);
+  if(c.includes(s)){G.lock=true;$('gmsg').className='good';$('gmsg').textContent='Giusto!';drawGame(s);
+    setTimeout(()=>{G.lock=false;G.i++;if(G.i>=ROUNDS){G.total=performance.now()-G.t0+G.pen;G.phase='done';clearInterval(tick);tick=null;
+      const b0=getBest(),rec=!b0||G.total<b0;if(rec)setBest(G.total);
+      $('gmsg').className='good';$('gmsg').textContent=`Finito in ${fmt(G.total)}${G.err?` (${G.err} ${G.err===1?'errore':'errori'}, +${G.err*3} s)`:', senza errori'}.${rec?' Nuovo record!':''}`;}
+      else{$('gmsg').className='';$('gmsg').textContent='Trova il simbolo in comune!';}drawGame();},450);}
+  else{G.pen+=PEN;G.err++;$('gmsg').className='bad';$('gmsg').textContent='No, quel simbolo è solo su una carta: +3 secondi.';$('timer').textContent=fmt(elapsed());}
+}
+function all(){sel=[];build();render();resetGame();}
+document.addEventListener('click',e=>{
+  let t=e.target.closest('button,g.sym');if(t&&t.matches('g.sym')&&!t.closest('.big'))t=t.closest('button');if(!t)return;
+  if(t.matches('g.sym')&&t.closest('.big')){pick(+t.dataset.s);return;}
+  if(t.dataset.rmimg!==undefined){imgs.splice(+t.dataset.rmimg,1);all();return;}
+  if(t.id==='imgclear'){imgs=[];all();return;}
+  if(t.id==='imgpick'){$('files').click();return;}
+  if(t.dataset.q){st.q=+t.dataset.q;st.wrong=false;all();return;}
+  if(t.dataset.wrong){st.wrong=!st.wrong;if(st.wrong)st.q=4;all();return;}
+  if(t.dataset.c!==undefined){const c=+t.dataset.c;if(sel.length>=2||sel.includes(c))sel=[c];else sel.push(c);render();return;}
+  if(t.dataset.show){sel=t.dataset.show.split(',').map(Number);render();return;}
+  if(t.id==='gstart'){startGame();return;}
+  if(t.id==='copyList'||t.id==='copySvg'){
+    const n=lines.length;let txt;
+    if(t.id==='copyList')txt=Array.from({length:n},(_,i)=>`Carta ${i+1} (${names[i]}): ${lines[i].map(s=>typeof S[s]==='object'?'img':S[s]).join(', ')}`).join('\n');
+    else{const per=4,sz=200;txt=`<svg xmlns="http://www.w3.org/2000/svg" width="${per*sz}" height="${Math.ceil(n/per)*sz}">`+Array.from({length:n},(_,i)=>`<g transform="translate(${i%per*sz} ${Math.floor(i/per)*sz})">${cardSVG(i,sz).replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" ')}</g>`).join('')+'</svg>';}
+    navigator.clipboard.writeText(txt).then(()=>{$('copymsg').textContent=t.id==='copyList'?'Elenco copiato.':'SVG copiato: incollalo in un file .svg e aprilo nel browser o in Inkscape per stamparlo.';},()=>{$('copymsg').textContent='Il browser non ha permesso la copia.';});
+  }
+});
+$('set').addEventListener('change',e=>{st.set=e.target.value;all();});
+$('words').addEventListener('input',()=>{build();render();resetGame();});
+function addFiles(list){
+  const fs=[...list].filter(f=>f.type.startsWith('image/'));if(!fs.length)return;
+  const out=new Array(fs.length);let left=fs.length;
+  const done=()=>{if(--left===0){imgs=imgs.concat(out.filter(Boolean));all();}};
+  fs.forEach((f,i)=>{const rd=new FileReader();rd.onerror=done;rd.onload=()=>{const im=new Image();im.onerror=done;im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=96;const x=c.getContext('2d'),s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,96,96);out[i]=c.toDataURL('image/png');done();};im.src=rd.result;};rd.readAsDataURL(f);});
+}
+$('files').addEventListener('change',e=>{addFiles(e.target.files);e.target.value='';});
+const dz=$('drop');
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('over');}));
+dz.addEventListener('drop',e=>{if(e.dataTransfer?.files)addFiles(e.dataTransfer.files);});
+function start(d){if(d&&d.st)st=Object.assign(st,d.st);st.dual=false;delete st.n;all();window.claude?.hot?.snapshot?.(()=>({st}));}
+window.claude?.hot?.ready?window.claude.hot.ready(start):start(window.claude?.hot?.data??{});
+}
+</script>
+</body>
+</html>
